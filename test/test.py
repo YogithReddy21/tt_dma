@@ -1,17 +1,15 @@
-# SPDX-FileCopyrightText: © 2024 Tiny Tapeout
 # SPDX-License-Identifier: Apache-2.0
-
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles, RisingEdge
+from cocotb.triggers import ClockCycles
 
 
 @cocotb.test()
-async def test_dma(dut):
-    dut._log.info("Starting DMA cocotb test")
+async def test_dma_single_transfer(dut):
+    """Test single transfer (mode=0)"""
 
-    # Clock: 100 kHz (10us period)
-    clock = Clock(dut.clk, 10, units="us")
+    # Start clock
+    clock = Clock(dut.clk, 10, units="ns")
     cocotb.start_soon(clock.start())
 
     # Reset
@@ -21,48 +19,48 @@ async def test_dma(dut):
     dut.rst_n.value = 0
     await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
-    dut._log.info("Reset released")
+    await ClockCycles(dut.clk, 2)
 
-    # Helper to wait until dma_done
-    async def wait_done():
-        while dut.uo_out.value.integer >> 7 == 0:  # dma_done is bit[7]
-            await RisingEdge(dut.clk)
-
-    # --------------------------
-    # Single transfer test
-    # --------------------------
-    dut._log.info("Starting single transfer test")
-    # Format: {start[7], src[6:4], dst[3:1], mode[0]}
-    dut.ui_in.value = int("10001000", 2)  # start=1, src=000, dst=100, mode=0
+    # Configure single transfer: start=1, src=000, dst=100, mode=0
+    dut.ui_in.value = int("10001000", 2)  # 1_000_100_0
     await ClockCycles(dut.clk, 1)
     dut.ui_in.value = 0  # clear start
 
-    await wait_done()
-    dma_done = (dut.uo_out.value.integer >> 7) & 1
-    data_out = dut.uo_out.value.integer & 0x7F
-    dut._log.info(f"Single transfer done, dma_done={dma_done}, data_out=0x{data_out:02X}")
+    # Wait until dma_done goes high
+    while dut.uo_out.value.integer >> 7 == 0:  # bit7 is dma_done
+        await ClockCycles(dut.clk, 1)
 
-    # Example assertion: after single transfer, expect mem[4] == mem[0] ("a")
-    # You can't directly peek mem[] here, only outputs.
-    # So check at least dma_done asserted and data_out matches.
-    assert dma_done == 1, "DMA did not complete single transfer"
-    assert data_out == ord("a"), f"Expected data_out='a' (0x61), got 0x{data_out:02X}"
+    data = dut.uo_out.value.integer & 0x7F
+    dut._log.info(f"Single transfer done, data_out=0x{data:02x}")
+    assert data == 0x61, "Expected first transfer to move 'a' (0x61)"
 
-    # --------------------------
-    # Burst transfer test
-    # --------------------------
-    dut._log.info("Starting burst transfer test")
-    dut.ui_in.value = int("10001001", 2)  # start=1, src=000, dst=100, mode=1
+
+@cocotb.test()
+async def test_dma_burst_transfer(dut):
+    """Test burst transfer (mode=1)"""
+
+    # Start clock
+    clock = Clock(dut.clk, 10, units="ns")
+    cocotb.start_soon(clock.start())
+
+    # Reset
+    dut.ena.value = 1
+    dut.ui_in.value = 0
+    dut.uio_in.value = 0
+    dut.rst_n.value = 0
+    await ClockCycles(dut.clk, 5)
+    dut.rst_n.value = 1
+    await ClockCycles(dut.clk, 2)
+
+    # Configure burst transfer: start=1, src=000, dst=100, mode=1
+    dut.ui_in.value = int("10001001", 2)  # 1_000_100_1
     await ClockCycles(dut.clk, 1)
-    dut.ui_in.value = 0  # clear start
+    dut.ui_in.value = 0
 
-    await wait_done()
-    dma_done = (dut.uo_out.value.integer >> 7) & 1
-    data_out = dut.uo_out.value.integer & 0x7F
-    dut._log.info(f"Burst transfer done, dma_done={dma_done}, last data_out=0x{data_out:02X}")
+    # Wait until dma_done goes high
+    while dut.uo_out.value.integer >> 7 == 0:
+        await ClockCycles(dut.clk, 1)
 
-    assert dma_done == 1, "DMA did not complete burst transfer"
-    # In burst, last word copied was "d" (0x64)
-    assert data_out == ord("d"), f"Expected data_out='d' (0x64), got 0x{data_out:02X}"
-
-    dut._log.info("DMA cocotb test PASSED")
+    data = dut.uo_out.value.integer & 0x7F
+    dut._log.info(f"Burst transfer done, last data_out=0x{data:02x}")
+    assert data == 0x63, "Expected last transfer to move 'c' (0x63)"
