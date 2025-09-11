@@ -3,38 +3,66 @@
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import ClockCycles
+from cocotb.triggers import ClockCycles, RisingEdge
 
 
 @cocotb.test()
-async def test_project(dut):
-    dut._log.info("Start")
+async def test_dma(dut):
+    dut._log.info("Starting DMA cocotb test")
 
-    # Set the clock period to 10 us (100 KHz)
+    # Clock: 100 kHz (10us period)
     clock = Clock(dut.clk, 10, units="us")
     cocotb.start_soon(clock.start())
 
     # Reset
-    dut._log.info("Reset")
     dut.ena.value = 1
     dut.ui_in.value = 0
     dut.uio_in.value = 0
     dut.rst_n.value = 0
-    await ClockCycles(dut.clk, 10)
+    await ClockCycles(dut.clk, 5)
     dut.rst_n.value = 1
+    dut._log.info("Reset released")
 
-    dut._log.info("Test project behavior")
+    # Helper to wait until dma_done
+    async def wait_done():
+        while dut.uo_out.value.integer >> 7 == 0:  # dma_done is bit[7]
+            await RisingEdge(dut.clk)
 
-    # Set the input values you want to test
-    dut.ui_in.value = 10
-    dut.uio_in.value = 0
-
-    # Wait for one clock cycle to see the output values
+    # --------------------------
+    # Single transfer test
+    # --------------------------
+    dut._log.info("Starting single transfer test")
+    # Format: {start[7], src[6:4], dst[3:1], mode[0]}
+    dut.ui_in.value = int("10001000", 2)  # start=1, src=000, dst=100, mode=0
     await ClockCycles(dut.clk, 1)
+    dut.ui_in.value = 0  # clear start
 
-    # The following assersion is just an example of how to check the output values.
-    # Change it to match the actual expected output of your module:
-    assert dut.uo_out.value == 10
+    await wait_done()
+    dma_done = (dut.uo_out.value.integer >> 7) & 1
+    data_out = dut.uo_out.value.integer & 0x7F
+    dut._log.info(f"Single transfer done, dma_done={dma_done}, data_out=0x{data_out:02X}")
 
-    # Keep testing the module by changing the input values, waiting for
-    # one or more clock cycles, and asserting the expected output values.
+    # Example assertion: after single transfer, expect mem[4] == mem[0] ("a")
+    # You can't directly peek mem[] here, only outputs.
+    # So check at least dma_done asserted and data_out matches.
+    assert dma_done == 1, "DMA did not complete single transfer"
+    assert data_out == ord("a"), f"Expected data_out='a' (0x61), got 0x{data_out:02X}"
+
+    # --------------------------
+    # Burst transfer test
+    # --------------------------
+    dut._log.info("Starting burst transfer test")
+    dut.ui_in.value = int("10001001", 2)  # start=1, src=000, dst=100, mode=1
+    await ClockCycles(dut.clk, 1)
+    dut.ui_in.value = 0  # clear start
+
+    await wait_done()
+    dma_done = (dut.uo_out.value.integer >> 7) & 1
+    data_out = dut.uo_out.value.integer & 0x7F
+    dut._log.info(f"Burst transfer done, dma_done={dma_done}, last data_out=0x{data_out:02X}")
+
+    assert dma_done == 1, "DMA did not complete burst transfer"
+    # In burst, last word copied was "d" (0x64)
+    assert data_out == ord("d"), f"Expected data_out='d' (0x64), got 0x{data_out:02X}"
+
+    dut._log.info("DMA cocotb test PASSED")
