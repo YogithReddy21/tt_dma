@@ -1,7 +1,7 @@
 # Tiny Tapeout project information
 project:
   title:        "DMA controller"      # Project title
-  author:       "Yogith Reddy M, Aditya Menon, Vignesh, Shylashree N, RV College of Engineering, Bengaluru"      # Your name
+  author:       "Yogith Reddy M, Aditya Menon, Vignesh Udupi, Shylashree N, RV College of Engineering, Bengaluru"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
   description:  "Design of a Tiny DMA controller"      # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
