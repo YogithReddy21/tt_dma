@@ -17,4 +17,4 @@ jobs:
         uses: TinyTapeout/tt-gds-action/docs@ttsky25a
         with:
           tools-ref: ttsky25a
-           artifact-name: github-pages
+          
