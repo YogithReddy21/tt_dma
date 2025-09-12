@@ -7,8 +7,7 @@ You can also include images in this folder and reference them in the markdown. E
 512 kb in size, and the combined size of all images must be less than 1 MB.
 -->
 
-# Project Name
-DMA Controller (TinyTapeout)
+# DMA Controller (TinyTapeout)
 
 How it works
 
