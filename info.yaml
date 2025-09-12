@@ -1,9 +1,9 @@
 # Tiny Tapeout project information
 project:
-  title:        "Tiny DMA controller"      # Project title
-  author:       "Yogith"      # Your name
+  title:        "DMA controller"      # Project title
+  author:       "Yogith Reddy M, Aditya Menon, Vignesh, Shylashree N, RV College of Engineering, Bengaluru"      # Your name
   discord:      ""      # Your discord username, for communication and automatically assigning you a Tapeout role (optional)
-  description:  "--"      # One line description of what your project does
+  description:  "Design of a Tiny DMA controller"      # One line description of what your project does
   language:     "Verilog" # other examples include SystemVerilog, Amaranth, VHDL, etc
   clock_hz:     10       # Clock frequency in Hz (or 0 if not applicable)
 
