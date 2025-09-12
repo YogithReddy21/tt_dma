@@ -91,6 +91,9 @@ module tiny_dma (
             mem[6]     <= 7'h00;
             mem[7]     <= 7'h00;
         end else begin
+                // default drivers (avoids undriven warnings)
+          dma_done <= 1'b0;
+          data_out <= data_out; // hold last value unless updated
             case (state)
                 IDLE: begin
                     dma_done <= 1'b0;
