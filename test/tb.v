@@ -26,7 +26,7 @@ module tb ();
 `endif
 
   // DUT instantiation
-  tt_um_dma user_project (
+  tt_um_dma user_project1 (
 `ifdef GL_TEST
       .VPWR(VPWR),
       .VGND(VGND),
