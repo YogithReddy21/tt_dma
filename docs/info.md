@@ -7,14 +7,21 @@ You can also include images in this folder and reference them in the markdown. E
 512 kb in size, and the combined size of all images must be less than 1 MB.
 -->
 
-## How it works
+# Project Name
+DMA Controller (TinyTapeout)
 
-Explain how your project works
+## How it works
+This design implements a tiny DMA (Direct Memory Access) controller.
+It copies data from a source address to a destination address in either
+single-transfer or burst-transfer mode. A small scratchpad memory inside
+the module is preloaded with test values, and transfers are triggered by
+config inputs.
 
 ## How to test
-
-Explain how to use your project
+- Simulation: Run `make test` to execute cocotb tests.
+- Hardware: Configure inputs via `ui_in` to set source, destination,
+  transfer mode, and start bit. Observe outputs via `uo_out`.
 
 ## External hardware
-
-List external hardware used in your project (e.g. PMOD, LED display, etc), if any
+No external hardware is required. The design runs standalone with the
+TinyTapeout framework.
