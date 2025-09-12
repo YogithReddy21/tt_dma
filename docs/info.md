@@ -9,6 +9,10 @@ You can also include images in this folder and reference them in the markdown. E
 
 # DMA Controller (TinyTapeout)
 
+Credits
+
+We gratefully acknowledge the Center of Excellence (CoE) in Integrated Circuits and Systems (ICAS) and the Department of Electronics and Communication Engineering (ECE) for providing the necessary resources and guidance. Special thanks to Dr. H V Ravish Aradhya (HOD-ECE), Dr. K. S. Geetha (Vice Principal) and Dr. K. N. Subramanya (Principal) for their constant encouragement and support to carry out this Tiny Tapeout 8 submission.
+
 How it works
 
 The tt_um_dma module is a simple Tiny DMA (Direct Memory Access) controller designed with a TinyTapeout wrapper. Its function is to transfer data from one memory location to another, either as a single transfer or as a small burst of three words, depending on configuration. The transfer is triggered by input control signals, and once completed, the module produces a dma_done pulse and outputs the last transferred data on uo_out.
